@@ -1,53 +1,63 @@
+import './test.js'
+
 const play = document.querySelector('.audio-play-btn')
 const download = document.querySelector('.audio-download-btn')
 const audio_ctx = new AudioContext()
 const audio_thread = new Worker('js/audio-thread.js', {type : 'module'})
 let data
 
-// document.body.addEventListener('dragover', e=>e.preventDefault())
+document.body.addEventListener('dragover', e=>e.preventDefault())
 
-// document.body.addEventListener('drop', async e=>{
-//     e.preventDefault()
+document.body.addEventListener('drop', async e=>{
+    e.preventDefault()
 
-//     // We only process one file at the time
-//     const file = e.dataTransfer.files[0]
+    // We only process one file at the time
+    const file = e.dataTransfer.files[0]
+    
+    // Inform user only audio file is accepted
+    if(!file.name.endsWith('pcm') && !file.type.startsWith('audio')){
+        alert('The file uploaded is not a valid audio file.')
+        return
+    }
 
-//     // Inform user only audio file is accepted
-//     if(!file.name.endsWith('pcm') && file.type.startsWith('audio')){
-//         alert('The file uploaded is not a valid audio file.')
-//         return
-//     }
+    const file_buffer = await file.arrayBuffer()
 
-//     if(file.name.endsWith('pcm')){
-//         // User input for sample and channel
-//         const sample = prompt('Please enter the sample rate of the PCM file:', 48000)
-//         const channel = prompt('Please enter the number of channels:', 2)
-//         const file_buffer = await file.arrayBuffer()
+    if(file.name.endsWith('pcm')){
+        // User input for sample and channel
+        const sample = prompt('Please enter the sample rate of the PCM file:', 48000)
+        const channel = prompt('Please enter the number of channels:', 2)
 
-//         audio_thread.postMessage({
-//             fn : 'processPCM',
-//             sample,
-//             channel, 
-//             file_buffer
-//         }, [file_buffer])
-//     }
-// })
+        audio_thread.postMessage({
+            fn : 'processPCM',
+            sample,
+            channel, 
+            file_buffer
+        }, [file_buffer])
 
-// audio_thread.onmessage = e=>data = e.data.float32processeddata
+        audio_thread.addEventListener('message', e=>{
+            const { result, frames } = e.data
+            const source = audio_ctx.createBufferSource()
+            const buffer = audio_ctx.createBuffer(channel, frames, sample)
 
-// These comes from user inputs
-const channel = 2
-const sample = 48000
-const pcm = await fetch('the-weeknd-blinding-lights.pcm').then(e=>e.arrayBuffer())
-const float32 = new Float32Array(pcm.byteLength)
-const view = new DataView(pcm)
-const mid = pcm.byteLength / channel
+            buffer.copyToChannel(result.subarray(0, frames), 0)
+            buffer.copyToChannel(result.subarray(frames), 1)
 
-for(let i = 0; i < float32.byteLength; i++){
-    float32[i + (i % channel) * mid] = view.getInt16(i * 2) / 32768
-}
+            data = source.buffer = buffer
+            source.connect(audio_ctx.destination)
+            source.start()
+        }, {once : true})
+    }
+    else{
+        data = await audio_ctx.decodeAudioData(file_buffer)
+        const source = audio_ctx.createBufferSource()
+        source.buffer = data
+        source.connect(audio_ctx.destination)
+        source.start()
+    }
+})
 
-console.log(float32)
+
+
 // const aud_ctx = new AudioContext()
 
 // // PCM are represented as 16-bit signed.
