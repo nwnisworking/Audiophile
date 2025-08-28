@@ -9,51 +9,51 @@ let data
 document.body.addEventListener('dragover', e=>e.preventDefault())
 
 document.body.addEventListener('drop', async e=>{
-    e.preventDefault()
+	e.preventDefault()
 
-    // We only process one file at the time
-    const file = e.dataTransfer.files[0]
-    
-    // Inform user only audio file is accepted
-    if(!file.name.endsWith('pcm') && !file.type.startsWith('audio')){
-        alert('The file uploaded is not a valid audio file.')
-        return
-    }
+	// We only process one file at the time
+	const file = e.dataTransfer.files[0]
+	
+	// Inform user only audio file is accepted
+	if(!file.name.endsWith('pcm') && !file.type.startsWith('audio')){
+		alert('The file uploaded is not a valid audio file.')
+		return
+	}
 
-    const file_buffer = await file.arrayBuffer()
+	const file_buffer = await file.arrayBuffer()
 
-    if(file.name.endsWith('pcm')){
-        // User input for sample and channel
-        const sample = prompt('Please enter the sample rate of the PCM file:', 48000)
-        const channel = prompt('Please enter the number of channels:', 2)
+	if(file.name.endsWith('pcm')){
+		// User input for sample and channel
+		const sample = prompt('Please enter the sample rate of the PCM file:', 48000)
+		const channel = prompt('Please enter the number of channels:', 2)
 
-        audio_thread.postMessage({
-            fn : 'processPCM',
-            sample,
-            channel, 
-            file_buffer
-        }, [file_buffer])
+		audio_thread.postMessage({
+				fn : 'processPCM',
+				sample,
+				channel, 
+				file_buffer
+		}, [file_buffer])
 
-        audio_thread.addEventListener('message', e=>{
-            const { result, frames } = e.data
-            const source = audio_ctx.createBufferSource()
-            const buffer = audio_ctx.createBuffer(channel, frames, sample)
+		audio_thread.addEventListener('message', e=>{
+				const { result, frames } = e.data
+				const source = audio_ctx.createBufferSource()
+				const buffer = audio_ctx.createBuffer(channel, frames, sample)
 
-            buffer.copyToChannel(result.subarray(0, frames), 0)
-            buffer.copyToChannel(result.subarray(frames), 1)
+				buffer.copyToChannel(result.subarray(0, frames), 0)
+				buffer.copyToChannel(result.subarray(frames), 1)
 
-            data = source.buffer = buffer
-            source.connect(audio_ctx.destination)
-            source.start()
-        }, {once : true})
-    }
-    else{
-        data = await audio_ctx.decodeAudioData(file_buffer)
-        const source = audio_ctx.createBufferSource()
-        source.buffer = data
-        source.connect(audio_ctx.destination)
-        source.start()
-    }
+				data = source.buffer = buffer
+				source.connect(audio_ctx.destination)
+				source.start()
+			}, {once : true})
+	}
+	else{
+			data = await audio_ctx.decodeAudioData(file_buffer)
+			const source = audio_ctx.createBufferSource()
+			source.buffer = data
+			source.connect(audio_ctx.destination)
+			source.start()
+	}
 })
 
 
