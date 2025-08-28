@@ -1,0 +1,24 @@
+.audio-controls{
+  background-color: rgba(0,0,0,0.5);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  color: #fff;
+  font-size: 2.5em;
+  padding: .35em;
+  display: flex;
+}
+
+.audio-play-btn{
+  margin: auto;
+}
+
+.audio-download-btn{
+  position: absolute;
+  right: 0;
+  padding-right: inherit;
+  font-size: .8em;
+  opacity: 0.5;
+}
