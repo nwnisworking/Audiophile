@@ -1,0 +1,27 @@
+:root{
+	--bg-color: #23263a;
+	--font-type: 'Segoe UI', Arial, sans-serif;
+	--font-color: #f5f6fa;
+}
+
+body{
+	font-family: var(--font-type);
+	color: var(--font-color);
+	background-color: var(--bg-color);
+	min-height: 100vh;
+	margin: 0;
+	padding: 0;
+}
+
+h1{
+		font-size: 20em;
+		text-align: center;
+		opacity: 0.02;
+		position: fixed;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		z-index: -1;
+		color: var(--font-color);
+		margin: 0;
+}
